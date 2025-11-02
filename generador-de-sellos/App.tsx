@@ -1,19 +1,5 @@
 import React, { useState, useCallback } from 'react';
-
-// --- Helper Components (defined outside App to prevent re-creation on re-renders) ---
-
-const IconStamp = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v1h-5v3l-2.5-1.5L9 9V4H5z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 13v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6m14 0l-2.5-1.5L14 13l-2.5-1.5L9 13l-2.5-1.5L5 13" />
-    </svg>
-);
-
-const IconDownload = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-    </svg>
-);
+import { ArrowDownToLine, SendHorizontal } from 'lucide-react';
 
 const Spinner = () => (
     <div className="flex justify-center items-center my-8">
@@ -32,8 +18,6 @@ const ImageCard: React.FC<ImageCardProps> = ({ src, alt }) => (
     </div>
 );
 
-// --- Main App Component ---
-
 const App: React.FC = () => {
     const [score, setScore] = useState<string>('');
     const [images, setImages] = useState<string[]>([]);
@@ -42,14 +26,14 @@ const App: React.FC = () => {
 
     const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        // Allow only numbers
-        if (/^\d*$/.test(value)) {
+        // Allow only numbers and decimals
+        if (/^\d*\.?\d*$/.test(value)) {
             setScore(value);
         }
     };
 
     const generateStamps = useCallback(async () => {
-        if (!score || isNaN(Number(score))) {
+        if (!score || isNaN(Number(score)) || Number(score) < 0) {
             setError('Por favor, introduce una puntuación numérica válida.');
             return;
         }
@@ -57,13 +41,9 @@ const App: React.FC = () => {
         setError(null);
         setImages([]);
 
-        // Simulate an API call to the backend
-        // In a real application, you would replace this with a fetch() call to your API endpoint.
-        // For example: `const response = await fetch('https://your-api.com/generate-stamp?score=' + score);`
         try {
             await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
 
-            // The API is expected to return two image URLs. We simulate this here.
             const generatedImages = [
                 `https://picsum.photos/seed/${score}-${Date.now()}/400/400`,
                 `https://picsum.photos/seed/${score}-variant-${Date.now()}/400/400`
@@ -78,30 +58,30 @@ const App: React.FC = () => {
     }, [score]);
 
     const downloadImages = useCallback(async () => {
-      if(images.length === 0) return;
+        if (images.length === 0) return;
 
-      for (let i = 0; i < images.length; i++) {
-        try {
-          // We need to fetch the image again to get it as a blob
-          const response = await fetch(images[i]);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = `sello_puntuacion_${score}_${i + 1}.png`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          a.remove();
-        } catch (err) {
-          setError('Error al descargar la imagen. Es posible que el enlace temporal haya expirado. Intenta generar de nuevo.');
-          console.error('Download error:', err);
+        for (let i = 0; i < images.length; i++) {
+            try {
+                // We need to fetch the image again to get it as a blob
+                const response = await fetch(images[i]);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `sello_puntuacion_${score}_${i + 1}.png`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (err) {
+                setError('Error al descargar la imagen. Es posible que el enlace temporal haya expirado. Intenta generar de nuevo.');
+                console.error('Download error:', err);
+            }
         }
-      }
     }, [images, score]);
 
     return (
@@ -125,7 +105,7 @@ const App: React.FC = () => {
                                 type="text"
                                 value={score}
                                 onChange={handleScoreChange}
-                                placeholder="Introduce la puntuación (e.j., 85)"
+                                placeholder="Introduce la puntuación (e.j., 85.5)"
                                 className="w-full p-4 pl-6 text-lg bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-300 outline-none text-white placeholder-gray-500"
                                 disabled={isLoading}
                             />
@@ -135,8 +115,7 @@ const App: React.FC = () => {
                             disabled={isLoading || !score}
                             className="w-full md:w-auto flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
                         >
-                            <IconStamp />
-                            {isLoading ? 'Generando...' : 'Generar'}
+                            {isLoading ? 'Generando...' : <SendHorizontal />}
                         </button>
                     </div>
 
@@ -159,7 +138,7 @@ const App: React.FC = () => {
                                     onClick={downloadImages}
                                     className="w-full flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-green-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
                                 >
-                                    <IconDownload />
+                                    <ArrowDownToLine />
                                     Descargar Ambos Sellos
                                 </button>
                             </div>
