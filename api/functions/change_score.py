@@ -3,14 +3,16 @@ from decimal import Decimal
 from functions.change_seat_color_to_black import change_seat_color_to_black
 
 def change_score(new_score):
-    x = 250
+    x = 245
     if new_score > 10 or new_score < 0:
         raise ValueError("El puntaje debe estar entre 0 y 10.")
     
     if Decimal(str(new_score)).as_tuple().exponent < -2: # type: ignore
         raise ValueError("El puntaje debe tener solo dos decimales.")
 
-    score_formated = f"{new_score:.2f}".replace('.', ',')
+    score_formated = (
+    f"{new_score:.1f}" if new_score == int(new_score) else f"{new_score:.2f}"
+    ).replace('.', ',')
 
     seven_count = score_formated.count('7')
     one_count = score_formated.count('1')
