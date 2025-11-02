@@ -1,5 +1,0 @@
-{
-  "name": "Generador de Sellos",
-  "description": "Una aplicación web para generar sellos personalizados basados en una puntuación proporcionada por el usuario. Permite visualizar y descargar las imágenes generadas.",
-  "requestFramePermissions": []
-}
