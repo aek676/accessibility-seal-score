@@ -1,11 +1,12 @@
 def change_seat_color_to_black(image):
     try:
-        if image.mode != 'RGBA':
-            image = image.convert('RGBA')
+        result = image.copy()
+        if result.mode != 'RGBA':
+            result = result.convert('RGBA')
 
-        pixels = image.load()
+        pixels = result.load()
 
-        ancho, alto = image.size
+        ancho, alto = result.size
 
         for x in range(ancho):
             for y in range(alto):
@@ -15,7 +16,7 @@ def change_seat_color_to_black(image):
                 if r == umbral and g == umbral and b == umbral and a != 0:
                     pixels[x, y] = (0, 0, 0, 255)
 
-        return image
+        return result
 
     except Exception as e:
         print(f"Ocurrió un error: {e}")

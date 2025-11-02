@@ -20,9 +20,14 @@ const ImageCard: React.FC<ImageCardProps> = ({ src, alt }) => (
 
 const App: React.FC = () => {
     const [score, setScore] = useState<string>('');
+    const [imageName, setImageName] = useState<string>('');
     const [images, setImages] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    const handleImageNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setImageName(e.target.value);
+    }
 
     const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -42,15 +47,29 @@ const App: React.FC = () => {
         setImages([]);
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+            const API_URL = 'http://localhost:8000';
+            const response = await fetch(`${API_URL}/api/imagen-score/${score}`);
 
-            const generatedImages = [
-                `https://picsum.photos/seed/${score}-${Date.now()}/400/400`,
-                `https://picsum.photos/seed/${score}-variant-${Date.now()}/400/400`
-            ];
-            setImages(generatedImages);
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                throw new Error(`Error de comunicación con el servidor: ${response.status}`);
+            }
+
+            if (!response.ok) {
+                // If API returns an error response, use the error message from the API
+                throw new Error(data.error || `Error HTTP: ${response.status}`);
+            }
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            setImages([data.white_seal, data.black_seal]);
         } catch (err) {
-            setError('No se pudieron generar los sellos. Por favor, inténtalo de nuevo más tarde.');
+            const errorMessage = err instanceof Error ? err.message : 'No se pudieron generar los sellos. Por favor, inténtalo de nuevo más tarde.';
+            setError(errorMessage);
             console.error(err);
         } finally {
             setIsLoading(false);
@@ -60,25 +79,33 @@ const App: React.FC = () => {
     const downloadImages = useCallback(async () => {
         if (images.length === 0) return;
 
+        const imageTypes = ['sello blanco', 'sello negro'];
+
         for (let i = 0; i < images.length; i++) {
             try {
-                // We need to fetch the image again to get it as a blob
-                const response = await fetch(images[i]);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // For base64 images, we can directly create a blob
+                const base64Data = images[i].replace(/^data:image\/[a-z]+;base64,/, '');
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+
+                for (let j = 0; j < byteCharacters.length; j++) {
+                    byteNumbers[j] = byteCharacters.charCodeAt(j);
                 }
-                const blob = await response.blob();
+
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'image/png' });
+
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `sello_puntuacion_${score}_${i + 1}.png`;
+                a.download = `(${imageName}) ${imageTypes[i]}.png`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
                 a.remove();
             } catch (err) {
-                setError('Error al descargar la imagen. Es posible que el enlace temporal haya expirado. Intenta generar de nuevo.');
+                setError('Error al descargar la imagen.');
                 console.error('Download error:', err);
             }
         }
@@ -98,6 +125,18 @@ const App: React.FC = () => {
 
                 <main className="bg-gray-800/50 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-2xl border border-gray-700">
                     <div className="flex flex-col md:flex-row items-center gap-4">
+                        <div className="relative flex-grow w-full">
+                            <label htmlFor="name-input" className="sr-only">Nombre del sitio web</label>
+                            <input
+                                id="name-input"
+                                type="text"
+                                value={imageName}
+                                onChange={handleImageNameChange}
+                                placeholder="Introduce el nombre del sitio web (sitioweb.com)"
+                                className="w-full p-4 pl-6 text-lg bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-300 outline-none text-white placeholder-gray-500"
+                                disabled={isLoading}
+                            />
+                        </div>
                         <div className="relative flex-grow w-full">
                             <label htmlFor="score-input" className="sr-only">Puntuación</label>
                             <input
@@ -131,8 +170,8 @@ const App: React.FC = () => {
                         ) : images.length > 0 && (
                             <div className="flex flex-col gap-8">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <ImageCard src={images[0]} alt={`Sello generado con puntuación ${score}, versión 1`} />
-                                    <ImageCard src={images[1]} alt={`Sello generado con puntuación ${score}, versión 2`} />
+                                    <ImageCard src={images[0]} alt={`Sello blanco con puntuación ${score}`} />
+                                    <ImageCard src={images[1]} alt={`Sello negro con puntuación ${score}`} />
                                 </div>
                                 <button
                                     onClick={downloadImages}

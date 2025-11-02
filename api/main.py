@@ -1,15 +1,29 @@
 import io
 import base64
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from functions.change_score import change_score
 
 app = FastAPI()
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 @app.get("/")
 def read_root():
     return "Bievenido a la API de generación de sellos de accesibilidad."
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
 
 @app.get("/api/imagen-score/{score}")
 async def get_score_image_api(score: float):
