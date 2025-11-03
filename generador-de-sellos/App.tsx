@@ -48,7 +48,7 @@ const App: React.FC = () => {
 
         try {
             const API_URL = 'http://localhost:8000';
-            const response = await fetch(`${API_URL}/api/imagen-score/${score}`);
+            const response = await fetch(`/api/imagen-score/${score}`);
 
             let data;
             try {
@@ -144,7 +144,7 @@ const App: React.FC = () => {
                                 type="text"
                                 value={score}
                                 onChange={handleScoreChange}
-                                placeholder="Introduce la puntuación (e.j., 85.5)"
+                                placeholder="Introduce la puntuación (e.j., 8.55)"
                                 className="w-full p-4 pl-6 text-lg bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-300 outline-none text-white placeholder-gray-500"
                                 disabled={isLoading}
                             />

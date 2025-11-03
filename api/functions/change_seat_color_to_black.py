@@ -13,7 +13,7 @@ def change_seat_color_to_black(image):
                 r, g, b, a = pixels[x, y]
                 umbral = 255 
 
-                if r == umbral and g == umbral and b == umbral and a != 0:
+                if a != 0:
                     pixels[x, y] = (0, 0, 0, 255)
 
         return result

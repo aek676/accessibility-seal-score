@@ -3,8 +3,6 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
     environment:
       - PYTHONPATH=/app
     volumes:
@@ -21,13 +19,12 @@ services:
   generador-de-sellos:
     build:
       context: ./generador-de-sellos
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3000:3000"
+      dockerfile: Dockerfile.prod
     environment:
       - NODE_ENV=development
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - API_URL=/api
     depends_on:
       - api
     restart: unless-stopped
@@ -37,6 +34,23 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - generador-de-sellos
+
+volumes:
+  caddy_data:
+  caddy_config:
 
 networks:
   default:
