@@ -14,7 +14,7 @@ interface ImageCardProps {
 
 const ImageCard: React.FC<ImageCardProps> = ({ src, alt }) => (
     <div className="bg-gray-800 p-4 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300">
-        <img src={src} alt={alt} className="rounded-md w-full h-auto aspect-square object-cover" />
+        <img src={src} alt={alt} className="w-full h-auto" />
     </div>
 );
 
@@ -31,7 +31,6 @@ const App: React.FC = () => {
 
     const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        // Allow only numbers and decimals
         if (/^\d*\.?\d*$/.test(value)) {
             setScore(value);
         }
@@ -58,7 +57,6 @@ const App: React.FC = () => {
             }
 
             if (!response.ok) {
-                // If API returns an error response, use the error message from the API
                 throw new Error(data.error || `Error HTTP: ${response.status}`);
             }
 
