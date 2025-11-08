@@ -10,9 +10,10 @@ def change_score(new_score):
     if Decimal(str(new_score)).as_tuple().exponent < -2: # type: ignore
         raise ValueError("El puntaje debe tener solo dos decimales.")
 
-    score_formated = (
-    f"{new_score:.1f}" if new_score == int(new_score) else f"{new_score:.2f}"
-    ).replace('.', ',')
+    if new_score == 10:
+        score_formated = f"{new_score:.1f}".replace('.', ',')
+    else:
+        score_formated = f"{new_score:.2f}".replace('.', ',')
 
     seven_count = score_formated.count('7')
     one_count = score_formated.count('1')
